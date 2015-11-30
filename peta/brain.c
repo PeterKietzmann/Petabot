@@ -50,8 +50,6 @@
 
 static char stack[STACKSIZE];
 
-static servo_t steering;
-
 #define BRAIN_QUEUE_SIZE     (8)
 static msg_t _brain_msg_queue[BRAIN_QUEUE_SIZE];
 
@@ -100,21 +98,24 @@ static void *_brain_thread(void *arg)
 
 void brain_init(void)
 {
-    /* initialize the steering */
-    puts("init servo");
-    if (servo_init(&steering, CONF_STEERING_PWM, CONF_STEERING_PWM_CHAN,
-                   CONF_STEERING_MIN, CONF_STEERING_MAX) < 0) {
-        puts("ERROR initializing the STEERING\n");
+    /* initialize steering control */
+    puts("init steering");
+    gpio_init(CONF_STEERING_DIRA, GPIO_DIR_OUT, GPIO_NOPULL);
+    gpio_init(CONF_STEERING_DIRB, GPIO_DIR_OUT, GPIO_NOPULL);
+    if (pwm_init(CONF_STEERING_PWM, CONF_STEERING_PWM_CHAN,
+                 CONF_STEERING_FREQ, CONF_STEERING_RES) < 0) {
+        puts("ERROR initializing the steering DRIVE PWM\n");
         return;
     }
-    servo_set(&steering, CONF_STEERING_CENTER);
+    pwm_set(CONF_STEERING_PWM, CONF_STEERING_PWM_CHAN, 0);
+
     /* initialize motor control */
     puts("init motor");
     gpio_init(CONF_MOTOR_DIRA, GPIO_DIR_OUT, GPIO_NOPULL);
     gpio_init(CONF_MOTOR_DIRB, GPIO_DIR_OUT, GPIO_NOPULL);
     if (pwm_init(CONF_MOTOR_PWM, CONF_MOTOR_PWM_CHAN,
                  CONF_MOTOR_FREQ, CONF_MOTOR_RES) < 0) {
-        puts("ERROR initializing the DRIVE PWM\n");
+        puts("ERROR initializing the motor DRIVE PWM\n");
         return;
     }
     pwm_set(CONF_MOTOR_PWM, CONF_MOTOR_PWM_CHAN, 0);
@@ -146,11 +147,15 @@ void brain_set_speed(int16_t speed)
 
 void brain_steer(int16_t dir)
 {
-    dir = (dir / 2) + CONF_STEERING_CENTER;
-    if (dir < 0) {
-        dir = CONF_STEERING_MIN;
+    if (dir > 0) {
+        gpio_set(CONF_STEERING_DIRA);
+        gpio_clear(CONF_STEERING_DIRB);
+    } else {
+        gpio_clear(CONF_STEERING_DIRA);
+        gpio_set(CONF_STEERING_DIRB);
+        dir *= -1;
     }
-    servo_set(&steering, (unsigned int)dir);
+    pwm_set(CONF_STEERING_PWM, CONF_STEERING_PWM_CHAN, dir);
 }
 
 void brain_switches(uint8_t state)

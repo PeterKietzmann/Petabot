@@ -37,15 +37,15 @@
 #endif
 
 /**
- * @brief   Configure the steering servo motor
+ * @brief   Configure the steering motor
  * @{
  */
-#define CONF_STEERING_PWM       (PWM_1)
-#define CONF_STEERING_PWM_CHAN  (0U)
-#define CONF_STEERING_RES       (0x03ff)    /* 10-bit resolution */
-#define CONF_STEERING_MIN       (1000)
-#define CONF_STEERING_CENTER    (1500)
-#define CONF_STEERING_MAX       (2000)
+#define CONF_STEERING_PWM          (PWM_1)
+#define CONF_STEERING_PWM_CHAN     (0U)
+#define CONF_STEERING_FREQ         (1000U)
+#define CONF_STEERING_RES          (0x03ff)    /* results in ~10MHz timer freq */
+#define CONF_STEERING_DIRA         GPIO_PIN(PA,22)
+#define CONF_STEERING_DIRB         GPIO_PIN(PA,23)
 /** @} */
 
 /**
